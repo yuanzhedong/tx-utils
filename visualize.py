@@ -17,9 +17,9 @@ class Status:
     def __init__(self):
         # CPU部分
         # 每个cpu核心的频率变化
-        self.cpu_freq = [[], [], [], [], [], []]
+        self.cpu_freq = [[], [], [], [], [], [], [], []]
         # 占用率变化
-        self.cpu_utilization = [[], [], [], [], [], []]
+        self.cpu_utilization = [[], [], [], [], [], [], [], []]
         # GPU部分
         self.ram = []
         self.emc = []
@@ -45,6 +45,8 @@ def filter_content_from_raw_log(start_time, end_time, file_path):
         reg2 = re.compile(
             r'RAM (\d+).+?cpu \[(.+?)\] EMC (\d+)%@.+?GR3D (\d+)%')
     reg_cpu = re.compile(r'(\d+)\%@(\d+)')
+    # import pdb
+    # pdb.set_trace()
     result = reg.findall(content)
     status = Status()
     if result:
@@ -58,7 +60,11 @@ def filter_content_from_raw_log(start_time, end_time, file_path):
                     cpu_result = reg_cpu.findall(a_cpu)
                     if cpu_result:
                         cpu_result = cpu_result[0]
+                        print(i)
                         status.cpu_utilization[i].append(int(cpu_result[0]))
+                        print("***")
+                        print(i)
+                        print("###")
                         status.cpu_freq[i].append(int(cpu_result[1]))
                     else:
                         # this core is closed.
@@ -124,6 +130,13 @@ def write_status_to_xls(status, xls_file='./log.xls'):
                          max_col=base_offset_gpu)
     chart.add_data(data, titles_from_data=True)
     chart.add_data(data_gpu, titles_from_data=True)
+
+    chart_2 = LineChart()
+    chart_2.y_axis.title = 'Mem'
+    # where is the data
+    data_2 = Reference(sheet, min_col=base_offset_ram, min_row=2,
+                     max_row=len(status.ram) + base_offset_value - 1, max_col=base_offset_ram)
+    chart_2.add_data(data_2, titles_from_data=True)
     # chart.layout = Layout(
     #     manualLayout=ManualLayout(
     #         x=2, y=2,
@@ -137,6 +150,8 @@ def write_status_to_xls(status, xls_file='./log.xls'):
     # }
     # )
     sheet.add_chart(chart, 'A%d' % (len(status.gpu) + base_offset_value + 1))
+
+    sheet.add_chart(chart_2, 'A%d' %  (len(status.gpu) + base_offset_value + 20))
 
     wb.save(xls_file)
     print("Done!")
